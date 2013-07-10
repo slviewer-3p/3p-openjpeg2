@@ -29,10 +29,19 @@ pushd "$OPENJPEG_SOURCE_DIR"
         "windows")
             load_vsvars
 
-	    cmake . -G"Visual Studio 10" -DCMAKE_INSTALL_PREFIX=$stage
+     	    if [ "${AUTOBUILD_ARCH}" == "x64" ]
+            then
+              cmake . -G"Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX=$stage
             
-            build_sln "OPENJPEG.sln" "Release|Win32"
-            build_sln "OPENJPEG.sln" "Debug|Win32"
+              build_sln "OPENJPEG.sln" "Release|x64" "openjpeg"
+              build_sln "OPENJPEG.sln" "Debug|x64" "openjpeg"
+            else
+              cmake . -G"Visual Studio 10" -DCMAKE_INSTALL_PREFIX=$stage
+            
+              build_sln "OPENJPEG.sln" "Release|Win32" "openjpeg"
+              build_sln "OPENJPEG.sln" "Debug|Win32" "openjpeg"
+            fi
+
             mkdir -p "$stage/lib/debug"
             mkdir -p "$stage/lib/release"
             cp bin/Release/openjpeg{.dll,.lib} "$stage/lib/release"
