@@ -33,8 +33,8 @@ pushd "$OPENJPEG_SOURCE_DIR"
         "windows")
             load_vsvars
 
-	    cmake . -G"Visual Studio 10" -DCMAKE_INSTALL_PREFIX=$stage
-            
+            cmake . -G"Visual Studio 12" -DCMAKE_INSTALL_PREFIX=$stage
+
             build_sln "OPENJPEG.sln" "Release|Win32"
             build_sln "OPENJPEG.sln" "Debug|Win32"
             mkdir -p "$stage/lib/debug"
