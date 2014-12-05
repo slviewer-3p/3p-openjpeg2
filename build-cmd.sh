@@ -24,23 +24,27 @@ eval "$("$AUTOBUILD" source_environment)"
 set -x
 
 stage="$(pwd)/stage"
+
+build=${AUTOBUILD_BUILD_ID:=0}
+echo "${OPENJPEG_VERSION}.${build}" > "${stage}/VERSION.txt"
+
 pushd "$OPENJPEG_SOURCE_DIR"
     case "$AUTOBUILD_PLATFORM" in
         "windows")
             load_vsvars
 
-     	    if [ "${AUTOBUILD_ARCH}" == "x64" ]
-            then
-              cmake . -G"Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX=$stage
-            
-              build_sln "OPENJPEG.sln" "Release|x64" "openjpeg"
-              build_sln "OPENJPEG.sln" "Debug|x64" "openjpeg"
-            else
-              cmake . -G"Visual Studio 10" -DCMAKE_INSTALL_PREFIX=$stage
-            
-              build_sln "OPENJPEG.sln" "Release|Win32" "openjpeg"
-              build_sln "OPENJPEG.sln" "Debug|Win32" "openjpeg"
-            fi
+			if [ "${ND_AUTOBUILD_ARCH}" == "x64" ]
+			then
+				cmake . -G"Visual Studio 12 Win64" -DCMAKE_INSTALL_PREFIX=$stage -DND_WIN64_BUILD=On
+
+				build_sln "OPENJPEG.sln" "Release|x64"
+				build_sln "OPENJPEG.sln" "Debug|x64"
+			else
+				cmake . -G"Visual Studio 12" -DCMAKE_INSTALL_PREFIX=$stage
+
+				build_sln "OPENJPEG.sln" "Release|Win32"
+				build_sln "OPENJPEG.sln" "Debug|Win32"
+			fi
 
             mkdir -p "$stage/lib/debug"
             mkdir -p "$stage/lib/release"

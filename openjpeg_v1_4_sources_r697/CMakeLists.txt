@@ -299,8 +299,10 @@ ENDIF()
 #
 # Does the system have png library installed ?
 #
+IF( NOT ND_WIN64_BUILD )
+
 FIND_PACKAGE(PNG)
-#
+
 IF(PNG_FOUND)
   SET(HAVE_PNG_H 1)
   SET(HAVE_LIBPNG 1)
@@ -309,15 +311,20 @@ ENDIF()
 # Does the system have tiff library installed ?
 # 
 FIND_PACKAGE(TIFF)
-#
+
 IF(TIFF_FOUND)
   SET(HAVE_TIFF_H 1)
   SET(HAVE_LIBTIFF 1)
+ENDIF()
+
 ENDIF()
 #
 #
 # Does the system have lcms library installed ?
 #
+
+IF( NOT ND_WIN64_BUILD )
+
 SET(LCMS_LIB "")
 FIND_FILE(LCMS2_HEADER_FOUND lcms2.h)
 #
@@ -357,6 +364,8 @@ IF(NOT LCMS2_HEADER_FOUND)
    SET(HAVE_LCMS1_H 1)
   ENDIF()
  ENDIF()
+ENDIF()
+
 ENDIF()
 #
 # generate opj_config.h
