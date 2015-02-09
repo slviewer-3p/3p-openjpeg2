@@ -66,7 +66,8 @@ pushd "$OPENJPEG_SOURCE_DIR"
 	  
         ;;
         "linux")
-            CFLAGS="${AUTOBUILD_GCC_ARCH_FLAG}" CPPFLAGS="${AUTOBUILD_GCC_ARCH_FLAG}" LDFLAGS="${AUTOBUILD_GCC_ARCH_FLAG}" ./configure --target=i686-linux-gnu --prefix="$stage" --enable-png=no --enable-lcms1=no --enable-lcms2=no --enable-tiff=no
+			autoreconf -i
+            CFLAGS="${ND_AUTOBUILD_GCC_ARCH_FLAG}" CPPFLAGS="${ND_AUTOBUILD_GCC_ARCH_FLAG}" LDFLAGS="${ND_AUTOBUILD_GCC_ARCH_FLAG}" ./configure --target=i686-linux-gnu --prefix="$stage" --enable-png=no --enable-lcms1=no --enable-lcms2=no --enable-tiff=no --libdir="${stage}"
             make
             make install
 

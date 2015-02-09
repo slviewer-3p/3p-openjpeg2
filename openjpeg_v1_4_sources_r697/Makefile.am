@@ -9,7 +9,7 @@ clean-local:
 
 distclean-local: clean-local
 
-pkgconf_dir = /usr/lib/pkgconfig
+pkgconf_dir = $(libdir)/pkgconfig
 
 install-data-hook:
 	@echo ""
