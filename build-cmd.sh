@@ -7,8 +7,8 @@ set -x
 # make errors fatal
 set -e
 
-OPENJPEG_VERSION="1.4"
-OPENJPEG_SOURCE_DIR="openjpeg_v1_4_sources_r697"
+OPENJPEG_VERSION="2.1"
+OPENJPEG_SOURCE_DIR="src"
 
 if [ -z "$AUTOBUILD" ] ; then 
     fail
@@ -31,6 +31,8 @@ echo "${OPENJPEG_VERSION}.${build}" > "${stage}/VERSION.txt"
 pushd "$OPENJPEG_SOURCE_DIR"
     case "$AUTOBUILD_PLATFORM" in
         "windows")
+			echo "Not tested"
+			exit 1
             load_vsvars
 
 			if [ "${ND_AUTOBUILD_ARCH}" == "x64" ]
@@ -56,6 +58,8 @@ pushd "$OPENJPEG_SOURCE_DIR"
             cp libopenjpeg/openjpeg.h "$stage/include/openjpeg"
         ;;
         "darwin")
+			echo "Not tested"
+			exit 1
 	    cmake . -GXcode -D'CMAKE_OSX_ARCHITECTURES:STRING=i386;x86_64' \
 	    	-D'BUILD_SHARED_LIBS:bool=off' -D'BUILD_CODEC:bool=off' \
 	    	-DCMAKE_INSTALL_PREFIX=$stage -DCMAKE_OSX_DEPLOYMENT_TARGET=10.7 \
@@ -69,21 +73,26 @@ pushd "$OPENJPEG_SOURCE_DIR"
 	  
         ;;
         "linux")
-			test -d "${stage}/include" && rm -rf "${stage}/include"
-			autoreconf -i
-            CFLAGS="${ND_AUTOBUILD_GCC_ARCH_FLAG}" CPPFLAGS="${ND_AUTOBUILD_GCC_ARCH_FLAG}" LDFLAGS="${ND_AUTOBUILD_GCC_ARCH_FLAG}" ./configure --target=i686-linux-gnu --prefix="$stage" --enable-png=no --enable-lcms1=no --enable-lcms2=no --enable-tiff=no --libdir="${stage}/lib"
-            make
-            make install
-			
-            mv "$stage/include/openjpeg-$OPENJPEG_VERSION" "$stage/include/openjpeg"
 
-            mv "$stage/lib" "$stage/release"
-            mkdir -p "$stage/lib"
-            mv "$stage/release" "$stage/lib"
+			rm -rf build
+            mkdir build
+            cd build
+            cmake .. -DCMAKE_CXX_FLAGS=-"${ND_AUTOBUILD_GCC_ARCH_FLAG}" -DCMAKE_C_FLAGS="${ND_AUTOBUILD_GCC_ARCH_FLAG}" -DCMAKE_INSTALL_PREFIX=${stage} -DBUILD_CODEC=OFF -DBUILD_SHARED_LIBS=OFF
+
+            make
+			make install
+
+			rm -rf "$stage/include/openjpeg-$OPENJPEG_VERSION-fs"
+            mv "$stage/include/openjpeg-$OPENJPEG_VERSION/" "$stage/include/openjpeg-$OPENJPEG_VERSION-fs"
+
+            mv "$stage/lib/libopenjp2.a" "$stage"
+			rm -rf "$stage/lib"
+            mkdir -p "$stage/lib/release"
+            mv "$stage/libopenjp2.a" "$stage/lib/release"
         ;;
     esac
     mkdir -p "$stage/LICENSES"
-    cp LICENSE "$stage/LICENSES/openjpeg.txt"
+    cp LICENSE.txt "$stage/LICENSES/openjpeg.txt"
 popd
 
 pass

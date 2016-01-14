@@ -40,7 +40,7 @@
           <key>manifest</key>
           <array>
             <string>LICENSES/openjpeg.txt</string>
-            <string>include/openjpeg/*.h</string>
+            <string>include/*</string>
           </array>
           <key>name</key>
           <string>common</string>
@@ -84,8 +84,7 @@
           </map>
           <key>manifest</key>
           <array>
-            <string>lib/release/libopenjpeg*.so*</string>
-            <string>lib/release/libopenjpeg.a</string>
+            <string>lib/*</string>
           </array>
           <key>name</key>
           <string>linux</string>
@@ -115,7 +114,7 @@
         </map>
       </map>
       <key>source_directory</key>
-      <string>openjpeg_v1_4_sources_r697</string>
+      <string>src</string>
       <key>version_file</key>
       <string>VERSION.txt</string>
     </map>
