@@ -31,8 +31,6 @@ echo "${OPENJPEG_VERSION}.${build}" > "${stage}/VERSION.txt"
 pushd "$OPENJPEG_SOURCE_DIR"
     case "$AUTOBUILD_PLATFORM" in
         "windows")
-			echo "Not tested"
-			exit 1
             load_vsvars
 
 			if [ "${ND_AUTOBUILD_ARCH}" == "x64" ]
@@ -50,12 +48,12 @@ pushd "$OPENJPEG_SOURCE_DIR"
 
             mkdir -p "$stage/lib/debug"
             mkdir -p "$stage/lib/release"
-            cp bin/Release/openjpeg{.dll,.lib} "$stage/lib/release"
-            cp bin/Debug/openjpeg.dll "$stage/lib/debug/openjpegd.dll"
-            cp bin/Debug/openjpeg.lib "$stage/lib/debug/openjpegd.lib"
-            cp bin/Debug/openjpeg.pdb "$stage/lib/debug/openjpegd.pdb"
-            mkdir -p "$stage/include/openjpeg"
-            cp libopenjpeg/openjpeg.h "$stage/include/openjpeg"
+            cp bin/Release/openjp2{.dll,.lib} "$stage/lib/release"
+            cp bin/Debug/openjp2.dll "$stage/lib/debug/openjpegd.dll"
+            cp bin/Debug/openjp2.lib "$stage/lib/debug/openjpegd.lib"
+            cp bin/Debug/openjp2.pdb "$stage/lib/debug/openjpegd.pdb"
+            mkdir -p "$stage/include/openjpeg-${OPENJPEG_VERSION}-fs"
+            cp src/lib/openjp2/openjpeg.h "$stage/include/openjpeg-${OPENJPEG_VERSION}-fs"
         ;;
         "darwin")
 			echo "Not tested"
