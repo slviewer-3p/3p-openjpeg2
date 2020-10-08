@@ -12,7 +12,7 @@
       <key>license_file</key>
       <string>LICENSES/openjpeg.txt</string>
       <key>name</key>
-      <string>openjpeg2</string>
+      <string>openjpeg</string>
       <key>platforms</key>
       <map>
         <key>common</key>
