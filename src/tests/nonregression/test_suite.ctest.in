@@ -137,6 +137,40 @@ opj_compress -i @INPUT_NR_PATH@/pngsuite/ftp1n3p08.png -o @TEMP_PATH@/ftp1n3p08.
 # issue 571 Lossless is not lossless on linux x86
 opj_compress -i @INPUT_NR_PATH@/issue571.tif -o @TEMP_PATH@/issue571.tif.j2k
 
+# issue 729 Allow to read 3/5/7/9/11/13/15 bpp tif files 
+opj_compress -i @INPUT_NR_PATH@/flower-minisblack-03.tif -o @TEMP_PATH@/flower-minisblack-03.tif.jp2
+opj_compress -i @INPUT_NR_PATH@/flower-minisblack-05.tif -o @TEMP_PATH@/flower-minisblack-05.tif.jp2
+opj_compress -i @INPUT_NR_PATH@/flower-minisblack-07.tif -o @TEMP_PATH@/flower-minisblack-07.tif.jp2
+opj_compress -i @INPUT_NR_PATH@/flower-minisblack-09.tif -o @TEMP_PATH@/flower-minisblack-09.tif.jp2
+opj_compress -i @INPUT_NR_PATH@/flower-minisblack-11.tif -o @TEMP_PATH@/flower-minisblack-11.tif.jp2
+opj_compress -i @INPUT_NR_PATH@/flower-minisblack-13.tif -o @TEMP_PATH@/flower-minisblack-13.tif.jp2
+opj_compress -i @INPUT_NR_PATH@/flower-minisblack-15.tif -o @TEMP_PATH@/flower-minisblack-15.tif.jp2
+
+# issue 843 Crash with invalid ppm file
+!opj_compress -i @INPUT_NR_PATH@/issue843.ppm -o @TEMP_PATH@/issue843.ppm.jp2
+
+# Test all 6 coding options individually
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_vsc.j2k -M 8
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_bypass.j2k -M 1
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_reset.j2k -M 2
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_termall.j2k -M 4
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_pterm.j2k -M 16
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_segsym.j2k -M 32
+
+# Test a few combinations of coding options
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_bypass_termall.j2k -M 5
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_bypass_pterm.j2k -M 17
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_termall_pterm.j2k -M 20
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_bypass_termall_pterm.j2k -M 21
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_bypass_vsc_reset_termall_pterm_segsym.j2k -M 63
+
+# Test fix for #891/#892 (tiles smaller than decomposition levels)
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_empty_band.j2k -t 2591,1943 -n 2
+# Same rate as Bretagne2_4.j2k
+opj_compress -i @INPUT_NR_PATH@/Bretagne2.ppm -o @TEMP_PATH@/Bretagne2_empty_band_r800.j2k -t 2591,1943 -n 2 -r 800
+
+opj_compress -i @INPUT_NR_PATH@/issue982.bmp -o @TEMP_PATH@/issue982.j2k -n 1
+
 # DECODER TEST SUITE
 opj_decompress -i  @INPUT_NR_PATH@/Bretagne2.j2k -o @TEMP_PATH@/Bretagne2.j2k.pgx
 opj_decompress -i  @INPUT_NR_PATH@/_00042.j2k -o @TEMP_PATH@/_00042.j2k.pgx
@@ -236,8 +270,8 @@ opj_decompress -i @INPUT_NR_PATH@/issue211.jp2                  -o @TEMP_PATH@/i
 opj_decompress -i @INPUT_NR_PATH@/issue171.jp2                  -o @TEMP_PATH@/issue171.jp2.pgx
 # issue 171
 !opj_decompress -i @INPUT_NR_PATH@/issue165.jp2                  -o @TEMP_PATH@/issue165.jp2.pgx
-#
-!opj_decompress -i @INPUT_NR_PATH@/broken.jpc                    -o @TEMP_PATH@/broken.jpc.pgx
+# limit the decode area to avoid timeouts
+opj_decompress -i @INPUT_NR_PATH@/broken.jpc                    -o @TEMP_PATH@/broken.jpc.pgx -d 0,0,203,254
 # issue 226
 opj_decompress -i @INPUT_NR_PATH@/issue226.j2k                   -o @TEMP_PATH@/issue226.j2k.pgx
 # issue 297
@@ -328,7 +362,7 @@ opj_decompress -i @INPUT_NR_PATH@/issue458.jp2 -o @TEMP_PATH@/issue458.jp2.pgx
 # issue 475 Invalid number of layers
 !opj_decompress -i @INPUT_NR_PATH@/issue475.jp2 -o @TEMP_PATH@/issue475.jp2.pgx
 # issue 495 Overflow op_image_comp_header_updat
-opj_decompress -i @INPUT_NR_PATH@/issue495.jp2 -o @TEMP_PATH@/issue495.jp2.pgx
+!opj_decompress -i @INPUT_NR_PATH@/issue495.jp2 -o @TEMP_PATH@/issue495.jp2.pgx
 
 
 # decode with specific area
@@ -369,7 +403,8 @@ opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_7_4.j2k.png -
 opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_7_5.j2k.png -d 4,4,7,7 -r 1
 opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_7_6.j2k.png -d 4,4,5,5 -r 1
 
-opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_8_6.j2k.png -d 9,9,12,12 -r 2
+# result is empty at this resolution
+!opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_8_6.j2k.png -d 9,9,12,12 -r 2
 
 opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_9.j2k.png -t 0
 opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_9_1.j2k.png -t 5
@@ -379,7 +414,9 @@ opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_9_3.j2k.png -
 opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_10.j2k.png -t 0 -r 2
 opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_10_1.j2k.png -t 5 -r 2
 opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_10_2.j2k.png -t 9 -r 2
-opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_10_3.j2k.png -t 15 -r 2
+
+# this tile is empty at this resolution
+!opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_10_3.j2k.png -t 15 -r 2
 
 opj_decompress -i @INPUT_CONF_PATH@/p1_06.j2k -o @TEMP_PATH@/p1_06_11.j2k.png -r 4
 
@@ -508,3 +545,88 @@ opj_decompress -i @INPUT_NR_PATH@/issue559-eci-091-CIELab.jp2 -o @TEMP_PATH@/iss
 
 # issue 653 Last box of undefined size byg
 opj_decompress -i @INPUT_NR_PATH@/issue653-zero-unknownbox.jp2 -o @TEMP_PATH@/issue653-zero-unknownbox.jp2.png -p 8S
+
+# issue 729 decompress 3/5/7/9/11/13/15 bits precision to tiff
+# GRAYSCALE 
+opj_decompress -i @INPUT_CONF_PATH@/a1_mono.j2c -o @TEMP_PATH@/a1_mono_tif-3.tif -p 3S
+opj_decompress -i @INPUT_CONF_PATH@/a1_mono.j2c -o @TEMP_PATH@/a1_mono_tif-5.tif -p 5S
+opj_decompress -i @INPUT_CONF_PATH@/a1_mono.j2c -o @TEMP_PATH@/a1_mono_tif-7.tif -p 7S
+opj_decompress -i @INPUT_CONF_PATH@/a1_mono.j2c -o @TEMP_PATH@/a1_mono_tif-9.tif -p 9S
+opj_decompress -i @INPUT_CONF_PATH@/a1_mono.j2c -o @TEMP_PATH@/a1_mono_tif-11.tif -p 11S
+opj_decompress -i @INPUT_CONF_PATH@/a1_mono.j2c -o @TEMP_PATH@/a1_mono_tif-13.tif -p 13S
+opj_decompress -i @INPUT_CONF_PATH@/a1_mono.j2c -o @TEMP_PATH@/a1_mono_tif-15.tif -p 15S
+# GRAYSCALE ALPHA
+opj_decompress -i @INPUT_NR_PATH@/basn4a08.jp2 -o @TEMP_PATH@/basn4a08_tif-3.tif -p 3S
+opj_decompress -i @INPUT_NR_PATH@/basn4a08.jp2 -o @TEMP_PATH@/basn4a08_tif-5.tif -p 5S
+opj_decompress -i @INPUT_NR_PATH@/basn4a08.jp2 -o @TEMP_PATH@/basn4a08_tif-7.tif -p 7S
+opj_decompress -i @INPUT_NR_PATH@/basn4a08.jp2 -o @TEMP_PATH@/basn4a08_tif-9.tif -p 9S
+opj_decompress -i @INPUT_NR_PATH@/basn4a08.jp2 -o @TEMP_PATH@/basn4a08_tif-11.tif -p 11S
+opj_decompress -i @INPUT_NR_PATH@/basn4a08.jp2 -o @TEMP_PATH@/basn4a08_tif-13.tif -p 13S
+opj_decompress -i @INPUT_NR_PATH@/basn4a08.jp2 -o @TEMP_PATH@/basn4a08_tif-15.tif -p 15S
+# RGB
+opj_decompress -i @INPUT_CONF_PATH@/p0_14.j2k -o @TEMP_PATH@/p0_14_tif-3.tif -p 3S
+opj_decompress -i @INPUT_CONF_PATH@/p0_14.j2k -o @TEMP_PATH@/p0_14_tif-5.tif -p 5S
+opj_decompress -i @INPUT_CONF_PATH@/p0_14.j2k -o @TEMP_PATH@/p0_14_tif-7.tif -p 7S
+opj_decompress -i @INPUT_CONF_PATH@/p0_14.j2k -o @TEMP_PATH@/p0_14_tif-9.tif -p 9S
+opj_decompress -i @INPUT_CONF_PATH@/p0_14.j2k -o @TEMP_PATH@/p0_14_tif-11.tif -p 11S
+opj_decompress -i @INPUT_CONF_PATH@/p0_14.j2k -o @TEMP_PATH@/p0_14_tif-13.tif -p 13S
+opj_decompress -i @INPUT_CONF_PATH@/p0_14.j2k -o @TEMP_PATH@/p0_14_tif-15.tif -p 15S
+# RGBA
+opj_decompress -i @INPUT_NR_PATH@/basn6a08.jp2 -o @TEMP_PATH@/basn6a08_tif-3.tif -p 3S
+opj_decompress -i @INPUT_NR_PATH@/basn6a08.jp2 -o @TEMP_PATH@/basn6a08_tif-5.tif -p 5S
+opj_decompress -i @INPUT_NR_PATH@/basn6a08.jp2 -o @TEMP_PATH@/basn6a08_tif-7.tif -p 7S
+opj_decompress -i @INPUT_NR_PATH@/basn6a08.jp2 -o @TEMP_PATH@/basn6a08_tif-9.tif -p 9S
+opj_decompress -i @INPUT_NR_PATH@/basn6a08.jp2 -o @TEMP_PATH@/basn6a08_tif-11.tif -p 11S
+opj_decompress -i @INPUT_NR_PATH@/basn6a08.jp2 -o @TEMP_PATH@/basn6a08_tif-13.tif -p 13S
+opj_decompress -i @INPUT_NR_PATH@/basn6a08.jp2 -o @TEMP_PATH@/basn6a08_tif-15.tif -p 15S
+
+# issue 725
+!opj_decompress -i @INPUT_NR_PATH@/issue725.jp2 -o @TEMP_PATH@/issue725.png
+# issue 726
+opj_decompress -i @INPUT_NR_PATH@/issue726.j2k -o @TEMP_PATH@/issue726.png
+# issue 733
+!opj_decompress -i @INPUT_NR_PATH@/issue733.jp2 -o @TEMP_PATH@/issue733.png
+# issue 774
+!opj_decompress -i @INPUT_NR_PATH@/issue774.jp2 -o @TEMP_PATH@/issue774.png
+# issue 775
+!opj_decompress -i @INPUT_NR_PATH@/issue775.j2k -o @TEMP_PATH@/issue775.png
+!opj_decompress -i @INPUT_NR_PATH@/issue775-2.j2k -o @TEMP_PATH@/issue775-2.png
+# issue 818
+opj_decompress -i @INPUT_NR_PATH@/issue818.jp2 -o @TEMP_PATH@/issue818.png
+# issue 823
+!opj_decompress -i @INPUT_NR_PATH@/issue823.jp2 -o @TEMP_PATH@/issue823.png
+# issue 826
+!opj_decompress -i @INPUT_NR_PATH@/issue826.jp2 -o @TEMP_PATH@/issue826.png
+# issue 820
+!opj_decompress -i @INPUT_NR_PATH@/issue820.jp2 -o @TEMP_PATH@/issue820.png
+
+# issue 979 (.j2k with different bit depth per component)
+opj_decompress -i @INPUT_NR_PATH@/issue979.j2k -o @TEMP_PATH@/issue979.j2k.pgx
+
+# https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=3115
+opj_decompress -i @INPUT_NR_PATH@/dwt_interleave_h.gsr105.jp2 -o @TEMP_PATH@/dwt_interleave_h.gsr105.jp2_d_1_1_33_33.pgx -d 1,1,33,33
+
+# partial component decoding with opj_decode(): one component
+opj_decompress -i @INPUT_CONF_PATH@/file1.jp2 -o @TEMP_PATH@/file1.jp2-c0.tif -c 0
+# partial component decoding with opj_decode(): 3 components without MCT
+opj_decompress -i @INPUT_CONF_PATH@/file1.jp2 -o @TEMP_PATH@/file1.jp2-c0_1_2.tif -c 0,1,2
+# partial component decoding with opj_decode() and opj_set_decode_area()
+opj_decompress -i @INPUT_CONF_PATH@/file1.jp2 -o @TEMP_PATH@/file1.jp2-c0-d10_20_30_40.tif -c 0 -d 10,20,30,40
+# partial component decoding with opj_decode() and reduced resolution
+opj_decompress -i @INPUT_CONF_PATH@/file1.jp2 -o @TEMP_PATH@/file1.jp2-c0-r1.tif -c 0 -r 1
+# partial component decoding with opj_get_decoded_tile()
+opj_decompress -i @INPUT_CONF_PATH@/file1.jp2 -o @TEMP_PATH@/file1.jp2-c0-t0.tif -c 0 -t 0
+# partial component decoding with opj_get_decoded_tile() and reduced resolution
+opj_decompress -i @INPUT_CONF_PATH@/file1.jp2 -o @TEMP_PATH@/file1.jp2-c0-t0-r1.tif -c 0 -t 0 -r 1
+
+# try to map the same component several times
+!opj_decompress -i @INPUT_CONF_PATH@/file1.jp2 -o @TEMP_PATH@/file1.jp2-c0_0.tif -c 0,0
+# try to map an invalid component
+!opj_decompress -i @INPUT_CONF_PATH@/file1.jp2 -o @TEMP_PATH@/file1.jp2-c10.tif -c 10
+
+opj_decompress -i @INPUT_NR_PATH@/db11217111510058.jp2 -o @TEMP_PATH@/issue1043.png
+
+opj_decompress -i @INPUT_NR_PATH@/tnsot_zero.jp2 -o @TEMP_PATH@/tnsot_zero.png
+
+# try to decompress file with repeated PPT marker
+!opj_decompress -i @INPUT_NR_PATH@/oss-fuzz2785.jp2 -o @TEMP_PATH@/oss-fuzz2785.png

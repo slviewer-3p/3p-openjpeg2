@@ -24,7 +24,7 @@ endif()
 #string(TOLOWER ${OPENJPEG_NAMESPACE} OPENJPEG_LIBRARY_NAME)
 set(OPENJPEG_LIBRARY_NAME openjp2)
 
-project(${OPENJPEG_NAMESPACE} C)
+project(${OPENJPEG_NAMESPACE})
 
 # Do full dependency headers.
 include_regular_expression("^.*$")
@@ -32,8 +32,8 @@ include_regular_expression("^.*$")
 #-----------------------------------------------------------------------------
 # OPENJPEG version number, useful for packaging and doxygen doc:
 set(OPENJPEG_VERSION_MAJOR 2)
-set(OPENJPEG_VERSION_MINOR 1)
-set(OPENJPEG_VERSION_BUILD 0)
+set(OPENJPEG_VERSION_MINOR 3)
+set(OPENJPEG_VERSION_BUILD 1)
 set(OPENJPEG_VERSION
   "${OPENJPEG_VERSION_MAJOR}.${OPENJPEG_VERSION_MINOR}.${OPENJPEG_VERSION_BUILD}")
 set(PACKAGE_VERSION
@@ -52,11 +52,16 @@ set(PACKAGE_VERSION
 #   2.0   |  6
 #   2.0.1 |  6
 #   2.1   |  7
+#   2.1.1 |  7
+#   2.1.2 |  7
+#   2.2.0 |  7
+#   2.3.0 |  7
+#   2.3.1 |  7
 # above is the recommendation by the OPJ team. If you really need to override this default,
 # you can specify your own OPENJPEG_SOVERSION at cmake configuration time:
 # cmake -DOPENJPEG_SOVERSION:STRING=42 /path/to/openjpeg
 if(NOT OPENJPEG_SOVERSION)
-  SET(OPENJPEG_SOVERSION 7)
+  set(OPENJPEG_SOVERSION 7)
 endif(NOT OPENJPEG_SOVERSION)
 set(OPENJPEG_LIBRARY_PROPERTIES
   VERSION   "${OPENJPEG_VERSION_MAJOR}.${OPENJPEG_VERSION_MINOR}.${OPENJPEG_VERSION_BUILD}"
@@ -66,7 +71,7 @@ set(OPENJPEG_LIBRARY_PROPERTIES
 # --------------------------------------------------------------------------
 # Path to additional CMake modules
 set(CMAKE_MODULE_PATH
-    ${CMAKE_SOURCE_DIR}/cmake
+    ${${OPENJPEG_NAMESPACE}_SOURCE_DIR}/cmake
     ${CMAKE_MODULE_PATH})
 
 # --------------------------------------------------------------------------
@@ -162,14 +167,15 @@ TEST_BIG_ENDIAN(OPJ_BIG_ENDIAN)
 #-----------------------------------------------------------------------------
 # Setup file for setting custom ctest vars
 configure_file(
-  ${CMAKE_SOURCE_DIR}/cmake/CTestCustom.cmake.in
-  ${CMAKE_BINARY_DIR}/CTestCustom.cmake
+  ${${OPENJPEG_NAMESPACE}_SOURCE_DIR}/cmake/CTestCustom.cmake.in
+  ${${OPENJPEG_NAMESPACE}_BINARY_DIR}/CTestCustom.cmake
   @ONLY
   )
 
 #-----------------------------------------------------------------------------
 # OpenJPEG build configuration options.
 option(BUILD_SHARED_LIBS "Build OpenJPEG shared library and link executables against it." ON)
+option(BUILD_STATIC_LIBS "Build OpenJPEG static library." ON)
 set (EXECUTABLE_OUTPUT_PATH ${OPENJPEG_BINARY_DIR}/bin CACHE PATH "Single output directory for building all executables.")
 set (LIBRARY_OUTPUT_PATH ${OPENJPEG_BINARY_DIR}/bin CACHE PATH "Single output directory for building all libraries.")
 mark_as_advanced(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
@@ -190,7 +196,8 @@ if(CMAKE_COMPILER_IS_GNUCC)
   # For all builds, make sure openjpeg is std99 compliant:
   # set(CMAKE_C_FLAGS "-Wall -std=c99 ${CMAKE_C_FLAGS}") # FIXME: this setting prevented us from setting a coverage build.
   # Do not use ffast-math for all build, it would produce incorrect results, only set for release:
-  SET(OPENJPEG_LIBRARY_COMPILE_OPTIONS ${OPENJPEG_LIBRARY_COMPILE_OPTIONS} "$<$<CONFIG:Release>:-ffast-math>")
+  set(OPENJPEG_LIBRARY_COMPILE_OPTIONS ${OPENJPEG_LIBRARY_COMPILE_OPTIONS} "$<$<CONFIG:Release>:-ffast-math>")
+  set(OPENJP2_COMPILE_OPTIONS ${OPENJP2_COMPILE_OPTIONS} "$<$<CONFIG:Release>:-ffast-math>" -Wall -Wextra -Wconversion -Wunused-parameter -Wdeclaration-after-statement -Werror=declaration-after-statement)
 endif()
 
 #-----------------------------------------------------------------------------
@@ -225,14 +232,16 @@ CHECK_INCLUDE_FILE("unistd.h"       HAVE_UNISTD_H)
 include(TestLargeFiles)
 OPJ_TEST_LARGE_FILES(OPJ_HAVE_LARGEFILES)
 
-# Allocating Aligned Memory Blocks
+# Allocating Aligned Memory Blocks
 include(CheckIncludeFiles)
 check_include_files(malloc.h OPJ_HAVE_MALLOC_H)
 include(CheckSymbolExists)
 # _aligned_alloc https://msdn.microsoft.com/en-us/library/8z34s9c6.aspx
 check_symbol_exists(_aligned_malloc malloc.h OPJ_HAVE__ALIGNED_MALLOC)
-# posix_memalign
+# posix_memalign (needs _POSIX_C_SOURCE >= 200112L on Linux)
+set(CMAKE_REQUIRED_DEFINITIONS -D_POSIX_C_SOURCE=200112L)
 check_symbol_exists(posix_memalign stdlib.h OPJ_HAVE_POSIX_MEMALIGN)
+unset(CMAKE_REQUIRED_DEFINITIONS)
 # memalign (obsolete)
 check_symbol_exists(memalign malloc.h OPJ_HAVE_MEMALIGN)
 #-----------------------------------------------------------------------------
@@ -246,6 +255,8 @@ if(BUILD_JPIP_SERVER)
   endif()
 endif()
 add_subdirectory(src/lib)
+option(BUILD_LUTS_GENERATOR "Build utility to generate t1_luts.h" OFF)
+option(BUILD_UNIT_TESTS "Build unit tests (bench_dwt, test_sparse_array, etc..)" OFF)
 
 #-----------------------------------------------------------------------------
 # Build Applications
@@ -279,7 +290,7 @@ configure_file(
  ${CMAKE_CURRENT_BINARY_DIR}/src/lib/openjp2/opj_config.h
  @ONLY
  )
- 
+
  configure_file(
  ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/openjp2/opj_config_private.h.cmake.in
  ${CMAKE_CURRENT_BINARY_DIR}/src/lib/openjp2/opj_config_private.h
@@ -319,8 +330,8 @@ endif()
 #-----------------------------------------------------------------------------
 # install all targets referenced as OPENJPEGTargets
 install(EXPORT OpenJPEGTargets DESTINATION ${OPENJPEG_INSTALL_PACKAGE_DIR})
-configure_file( ${OPENJPEG_SOURCE_DIR}/cmake/OpenJPEGConfig.cmake.in
-  ${OPENJPEG_BINARY_DIR}/OpenJPEGConfig.cmake
+configure_file( ${${OPENJPEG_NAMESPACE}_SOURCE_DIR}/cmake/OpenJPEGConfig.cmake.in
+  ${${OPENJPEG_NAMESPACE}_BINARY_DIR}/OpenJPEGConfig.cmake
   @ONLY
 )
 install( FILES ${OPENJPEG_BINARY_DIR}/OpenJPEGConfig.cmake
@@ -341,8 +352,8 @@ include (cmake/OpenJPEGCPack.cmake)
 
 #-----------------------------------------------------------------------------
 # pkgconfig support
-# enabled by default on Unix, disabled by default on other platforms
-if(UNIX)
+# enabled by default on Unix or if using GCC, disabled by default on other platforms
+if(UNIX OR CMAKE_COMPILER_IS_GNUCC)
   option(BUILD_PKGCONFIG_FILES "Build and install pkg-config files" ON)
 else()
   option(BUILD_PKGCONFIG_FILES "Build and install pkg-config files" OFF)
@@ -380,3 +391,6 @@ if(BUILD_PKGCONFIG_FILES)
 endif()
 
 #-----------------------------------------------------------------------------
+
+# build our version of astyle
+SET (WITH_ASTYLE FALSE CACHE BOOL "If you plan to contribute you should reindent with scripts/prepare-commit.sh (using 'our' astyle)")

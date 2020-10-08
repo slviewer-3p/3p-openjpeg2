@@ -13,7 +13,7 @@ set(common_SRCS
   ${OPENJPEG_SOURCE_DIR}/src/bin/common/opj_getopt.h
   ${OPENJPEG_SOURCE_DIR}/src/bin/common/opj_string.h
   )
-  
+
 if(OPJ_HAVE_LIBTIFF)
 	list(APPEND common_SRCS converttif.c)
 endif()
@@ -44,6 +44,9 @@ endif()
 # Loop over all executables:
 foreach(exe opj_decompress opj_compress opj_dump)
   add_executable(${exe} ${exe}.c ${common_SRCS})
+  if(NOT ${CMAKE_VERSION} VERSION_LESS "2.8.12")
+    target_compile_options(${exe} PRIVATE ${OPENJP2_COMPILE_OPTIONS})
+  endif()
   target_link_libraries(${exe} ${OPENJPEG_LIBRARY_NAME}
     ${PNG_LIBNAME} ${TIFF_LIBNAME} ${LCMS_LIBNAME}
     )
@@ -57,6 +60,9 @@ foreach(exe opj_decompress opj_compress opj_dump)
   # On unix you need to link to the math library:
   if(UNIX)
     target_link_libraries(${exe} m)
+    IF("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+      target_link_libraries(${exe} rt)
+    endif()
   endif()
   # Install exe
   install(TARGETS ${exe}
@@ -64,7 +70,7 @@ foreach(exe opj_decompress opj_compress opj_dump)
     DESTINATION ${OPENJPEG_INSTALL_BIN_DIR} COMPONENT Applications
   )
   if(OPJ_USE_DSYMUTIL)
-    add_custom_command(TARGET ${exe} POST_BUILD 
+    add_custom_command(TARGET ${exe} POST_BUILD
     COMMAND "dsymutil" "$<TARGET_FILE:${exe}>"
     COMMENT "dsymutil $<TARGET_FILE:${exe}>"
     DEPENDS ${exe})

@@ -1,6 +1,6 @@
 /*
- * The copyright in this software is being made available under the 2-clauses 
- * BSD License, included below. This software may be subject to other third 
+ * The copyright in this software is being made available under the 2-clauses
+ * BSD License, included below. This software may be subject to other third
  * party and contributor rights, including patent rights, and no such rights
  * are granted under this license.
  *
@@ -9,7 +9,7 @@
  * Copyright (c) 2003-2005, Francois Devaux and Antonin Descampe
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
  * Copyright (c) 2002-2005, Communications and remote sensing Laboratory, Universite catholique de Louvain, Belgium
- * Copyrigth (c) 2006, Mónica Díez, LPI-UVA, Spain
+ * Copyrigth (c) 2006, MÃ³nica DÃ­ez, LPI-UVA, Spain
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,10 +54,10 @@ DCCS-LIWT properties
 
 
 typedef struct opj_wtfilt {
-	double *LPS;
-	int lenLPS;
-	double *HPS;
-	int lenHPS;
+    double *LPS;
+    int lenLPS;
+    double *HPS;
+    int lenHPS;
 } opj_wtfilt_t;
 /** @name Funciones generales */
 /*@{*/
@@ -95,7 +95,7 @@ Get the norm of a wavelet function of a subband at a specified level for the rev
 double dwt_getnorm(int orient, int level[3], int dwtid[3]);
 /* ----------------------------------------------------------------------- */
 /**
-Calcula el valor del escalón de cuantificación correspondiente a cada subbanda.
+Calcula el valor del escalÃ³n de cuantificaciÃ³n correspondiente a cada subbanda.
 @param tccp Tile component coding parameters
 @param prec Precision of data
 */

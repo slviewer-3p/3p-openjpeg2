@@ -1,7 +1,7 @@
 
 # OPENJPEG Library and Applications
 
-## What is OpenJPEG ?
+## What is OpenJPEG ? 
 
 OpenJPEG is an open-source JPEG 2000 codec written in C language. It has been developed in order to promote the use of [JPEG 2000](http://www.jpeg.org/jpeg2000), a still-image compression standard from the Joint Photographic Experts Group ([JPEG](http://www.jpeg.org)).  Since April 2015, it is officially recognized by ISO/IEC and ITU-T as a [JPEG 2000 Reference Software](http://www.itu.int/rec/T-REC-T.804-201504-I!Amd2).
 
@@ -49,14 +49,17 @@ The library is developed and maintained by the Image and Signal Processing Group
 * doc: doxygen documentation setup file and man pages
 * tests: configuration files and utilities for the openjpeg test suite. All test images are located in [openjpeg-data](https://github.com/uclouvain/openjpeg-data) repository.
 * cmake: cmake related files
+* scripts: scripts for developers
 
 See [LICENSE][link-license] for license and copyright information.
 
-See [INSTALL](https://github.com/uclouvain/openjpeg/blob/master/INSTALL) for installation procedures.
+See [INSTALL](https://github.com/uclouvain/openjpeg/blob/master/INSTALL.md) for installation procedures.
 
-See [NEWS](https://github.com/uclouvain/openjpeg/blob/master/NEWS) for user visible changes in successive releases.
+See [NEWS](https://github.com/uclouvain/openjpeg/blob/master/NEWS.md) for user visible changes in successive releases.
 
 ## API/ABI
+
+An API/ABI timeline is automatically updated [here][link-api-timeline].
 
 OpenJPEG strives to provide a stable API/ABI for your applications. As such it
 only exposes a limited subset of its functions.  It uses a mechanism of
@@ -69,11 +72,12 @@ On windows, MSVC directly supports export/hiding function and as such the only
 API available is the one supported by OpenJPEG.
 
 [comment-license]: https://img.shields.io/github/license/uclouvain/openjpeg.svg "https://img.shields.io/badge/license-BSD--2--Clause-blue.svg"
-[badge-license]: https://img.shields.io/badge/license-BSD--2--Clause-blue.svg "BSD 2-clause "Simplified" License"
-[link-license]: https://github.com/uclouvain/openjpeg/blob/master/LICENSE "BSD 2-clause "Simplified" License"
+[badge-license]: https://img.shields.io/badge/license-BSD--2--Clause-blue.svg "BSD 2-clause \"Simplified\" License"
+[link-license]: https://github.com/uclouvain/openjpeg/blob/master/LICENSE "BSD 2-clause \"Simplified\" License"
 [badge-build]: https://travis-ci.org/uclouvain/openjpeg.svg?branch=master "Build Status"
 [link-build]: https://travis-ci.org/uclouvain/openjpeg "Build Status"
 [badge-msvc-build]: https://ci.appveyor.com/api/projects/status/github/uclouvain/openjpeg?branch=master&svg=true "Windows Build Status"
 [link-msvc-build]: https://ci.appveyor.com/project/detonin/openjpeg/branch/master "Windows Build Status"
 [badge-coverity]: https://scan.coverity.com/projects/6383/badge.svg "Coverity Scan Build Status"
 [link-coverity]: https://scan.coverity.com/projects/uclouvain-openjpeg "Coverity Scan Build Status"
+[link-api-timeline]: http://www.openjpeg.org/abi-check/timeline/openjpeg "OpenJPEG API/ABI timeline"

@@ -19,7 +19,7 @@ if("$ENV{TRAVIS_OS_NAME}" STREQUAL "windows")
 	set( JPYLYZER_EXT          "exe"  )
 else()
 	set( CTEST_CMAKE_GENERATOR "Unix Makefiles")   # Always makefile in travis-ci environment
-	set( CCFLAGS_WARNING "-Wall -Wextra -Wconversion -Wno-unused-parameter -Wdeclaration-after-statement")
+	set( CCFLAGS_WARNING "-Wall -Wextra -Wconversion -Wno-unused-parameter -Wdeclaration-after-statement -Werror=declaration-after-statement")
 	set( JPYLYZER_EXT          "py"  )
 endif()
 
@@ -53,6 +53,11 @@ if (NOT "$ENV{OPJ_CI_ARCH}" STREQUAL "")
 	endif()
 endif()
 
+if (NOT "$ENV{OPJ_CI_INSTRUCTION_SETS}" STREQUAL "")
+	set(CCFLAGS_ARCH "${CCFLAGS_ARCH} $ENV{OPJ_CI_INSTRUCTION_SETS}")
+endif()
+
+
 if ("$ENV{OPJ_CI_ASAN}" STREQUAL "1")
 	set(OPJ_HAS_MEMCHECK TRUE)
 	set(CTEST_MEMORYCHECK_TYPE "AddressSanitizer")
@@ -69,8 +74,8 @@ if("$ENV{CC}" MATCHES ".*mingw.*")
 endif()
 
 if(NOT "$ENV{OPJ_CI_SKIP_TESTS}" STREQUAL "1")
-	# To execute part of the encoding test suite, kakadu binaries are needed to decode encoded image and compare 
-	# it to the baseline. Kakadu binaries are freely available for non-commercial purposes 
+	# To execute part of the encoding test suite, kakadu binaries are needed to decode encoded image and compare
+	# it to the baseline. Kakadu binaries are freely available for non-commercial purposes
 	# at http://www.kakadusoftware.com.
 	# Here's the copyright notice from kakadu:
 	# Copyright is owned by NewSouth Innovations Pty Limited, commercial arm of the UNSW Australia in Sydney.
@@ -91,7 +96,14 @@ else()
 	set(BUILD_TESTING "FALSE")
 endif(NOT "$ENV{OPJ_CI_SKIP_TESTS}" STREQUAL "1")
 
-# Options 
+
+if("$ENV{OPJ_CI_CHECK_STYLE}" STREQUAL "1")
+	set(BUILD_ASTYLE "TRUE")
+else()
+	set(BUILD_ASTYLE "FALSE")
+endif("$ENV{OPJ_CI_CHECK_STYLE}" STREQUAL "1")
+
+# Options
 set( CACHE_CONTENTS "
 
 # Build kind
@@ -100,22 +112,27 @@ CMAKE_BUILD_TYPE:STRING=${CTEST_BUILD_CONFIGURATION}
 # Warning level
 CMAKE_C_FLAGS:STRING= ${CCFLAGS_ARCH} ${CCFLAGS_WARNING}
 
+# For astyle
+CMAKE_CXX_FLAGS:STRING= ${CCFLAGS_ARCH}
+
 # Use to activate the test suite
 BUILD_TESTING:BOOL=${BUILD_TESTING}
 
-# Build Thirdparty, useful but not required for test suite 
+# Build Thirdparty, useful but not required for test suite
 BUILD_THIRDPARTY:BOOL=TRUE
 
 # JPEG2000 test files are available with git clone https://github.com/uclouvain/openjpeg-data.git
 OPJ_DATA_ROOT:PATH=$ENV{PWD}/data
 
-# jpylyzer is available with on GitHub: https://github.com/openpreserve/jpylyzer  
+# jpylyzer is available with on GitHub: https://github.com/openpreserve/jpylyzer
 JPYLYZER_EXECUTABLE=$ENV{PWD}/jpylyzer/jpylyzer.${JPYLYZER_EXT}
 
+# Enable astyle
+WITH_ASTYLE:BOOL=${BUILD_ASTYLE}
 " )
 
 #---------------------
-#1. openjpeg specific: 
+#1. openjpeg specific:
 set( CTEST_PROJECT_NAME	"OPENJPEG" )
 if(NOT EXISTS $ENV{OPJ_SOURCE_DIR})
 	message(FATAL_ERROR "OPJ_SOURCE_DIR not defined or does not exist:$ENV{OPJ_SOURCE_DIR}")

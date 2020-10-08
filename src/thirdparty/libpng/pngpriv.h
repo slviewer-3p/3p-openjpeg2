@@ -1,8 +1,8 @@
 
 /* pngpriv.h - private declarations for use inside libpng
  *
- * Last changed in libpng 1.6.17 [March 26, 2015]
- * Copyright (c) 1998-2015 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.25 [September 1, 2016]
+ * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -118,8 +118,12 @@
     * to compile with an appropriate #error if ALIGNED_MEMORY has been turned
     * off.
     *
-    * Note that gcc-4.9 defines __ARM_NEON instead of __ARM_NEON__, so we
-    * check both variants.
+    * Note that gcc-4.9 defines __ARM_NEON instead of the deprecated
+    * __ARM_NEON__, so we check both variants.
+    *
+    * To disable ARM_NEON optimizations entirely, and skip compiling the
+    * associated assembler code, pass --enable-arm-neon=no to configure
+    * or put -DPNG_ARM_NEON_OPT=0 in CPPFLAGS.
     */
 #  if (defined(__ARM_NEON__) || defined(__ARM_NEON)) && \
    defined(PNG_ALIGNED_MEMORY_SUPPORTED)
@@ -177,6 +181,35 @@
 #     define PNG_ARM_NEON_IMPLEMENTATION 1
 #  endif
 #endif /* PNG_ARM_NEON_OPT > 0 */
+
+#ifndef PNG_MIPS_MSA_OPT
+#  if defined(__mips_msa) && (__mips_isa_rev >= 5) && defined(PNG_ALIGNED_MEMORY_SUPPORTED)
+#     define PNG_MIPS_MSA_OPT 2
+#  else
+#     define PNG_MIPS_MSA_OPT 0
+#  endif
+#endif
+
+#if PNG_MIPS_MSA_OPT > 0
+#  define PNG_FILTER_OPTIMIZATIONS png_init_filter_functions_msa
+#  ifndef PNG_MIPS_MSA_IMPLEMENTATION
+#     if defined(__mips_msa)
+#        if defined(__clang__)
+#        elif defined(__GNUC__)
+#           if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 7)
+#              define PNG_MIPS_MSA_IMPLEMENTATION 2
+#           endif /* no GNUC support */
+#        endif /* __GNUC__ */
+#     else /* !defined __mips_msa */
+#        define PNG_MIPS_MSA_IMPLEMENTATION 2
+#     endif /* __mips_msa */
+#  endif /* !PNG_MIPS_MSA_IMPLEMENTATION */
+
+#  ifndef PNG_MIPS_MSA_IMPLEMENTATION
+#     define PNG_MIPS_MSA_IMPLEMENTATION 1
+#  endif
+#endif /* PNG_MIPS_MSA_OPT > 0 */
+
 
 /* Is this a build of a DLL where compilation of the object modules requires
  * different preprocessor settings to those required for a simple library?  If
@@ -248,17 +281,18 @@
  * always be used to declare an extern data or function object in this file.
  */
 #ifndef PNG_INTERNAL_DATA
-#  define PNG_INTERNAL_DATA(type, name, array) extern type name array
+#  define PNG_INTERNAL_DATA(type, name, array) PNG_LINKAGE_DATA type name array
 #endif
 
 #ifndef PNG_INTERNAL_FUNCTION
 #  define PNG_INTERNAL_FUNCTION(type, name, args, attributes)\
-      extern PNG_FUNCTION(type, name, args, PNG_EMPTY attributes)
+      PNG_LINKAGE_FUNCTION PNG_FUNCTION(type, name, args, PNG_EMPTY attributes)
 #endif
 
 #ifndef PNG_INTERNAL_CALLBACK
 #  define PNG_INTERNAL_CALLBACK(type, name, args, attributes)\
-      extern PNG_FUNCTION(type, (PNGCBAPI name), args, PNG_EMPTY attributes)
+      PNG_LINKAGE_CALLBACK PNG_FUNCTION(type, (PNGCBAPI name), args,\
+         PNG_EMPTY attributes)
 #endif
 
 /* If floating or fixed point APIs are disabled they may still be compiled
@@ -294,6 +328,22 @@
 /* pngconf.h does not set PNG_DLL_EXPORT unless it is required, so: */
 #ifndef PNG_DLL_EXPORT
 #  define PNG_DLL_EXPORT
+#endif
+
+/* This is a global switch to set the compilation for an installed system
+ * (a release build).  It can be set for testing debug builds to ensure that
+ * they will compile when the build type is switched to RC or STABLE, the
+ * default is just to use PNG_LIBPNG_BUILD_BASE_TYPE.  Set this in CPPFLAGS
+ * with either:
+ *
+ *   -DPNG_RELEASE_BUILD Turns on the release compile path
+ *   -DPNG_RELEASE_BUILD=0 Turns it off
+ * or in your pngusr.h with
+ *   #define PNG_RELEASE_BUILD=1 Turns on the release compile path
+ *   #define PNG_RELEASE_BUILD=0 Turns it off
+ */
+#ifndef PNG_RELEASE_BUILD
+#  define PNG_RELEASE_BUILD (PNG_LIBPNG_BUILD_BASE_TYPE >= PNG_LIBPNG_BUILD_RC)
 #endif
 
 /* SECURITY and SAFETY:
@@ -399,10 +449,10 @@
 
 #  if (defined(__MWERKS__) && defined(macintosh)) || defined(applec) || \
     defined(THINK_C) || defined(__SC__) || defined(TARGET_OS_MAC)
-     /* We need to check that <math.h> hasn't already been included earlier
-      * as it seems it doesn't agree with <fp.h>, yet we should really use
-      * <fp.h> if possible.
-      */
+   /* We need to check that <math.h> hasn't already been included earlier
+    * as it seems it doesn't agree with <fp.h>, yet we should really use
+    * <fp.h> if possible.
+    */
 #    if !defined(__MATH_H__) && !defined(__MATH_H) && !defined(__cmath__)
 #      include <fp.h>
 #    endif
@@ -410,9 +460,9 @@
 #    include <math.h>
 #  endif
 #  if defined(_AMIGA) && defined(__SASC) && defined(_M68881)
-     /* Amiga SAS/C: We must include builtin FPU functions when compiling using
-      * MATH=68881
-      */
+   /* Amiga SAS/C: We must include builtin FPU functions when compiling using
+    * MATH=68881
+    */
 #    include <m68881.h>
 #  endif
 #endif
@@ -554,10 +604,6 @@
 #define PNG_STRUCT_PNG   0x0001
 #define PNG_STRUCT_INFO  0x0002
 
-/* Scaling factor for filter heuristic weighting calculations */
-#define PNG_WEIGHT_FACTOR (1<<(PNG_WEIGHT_SHIFT))
-#define PNG_COST_FACTOR (1<<(PNG_COST_SHIFT))
-
 /* Flags for the png_ptr->flags rather than declaring a byte for each one */
 #define PNG_FLAG_ZLIB_CUSTOM_STRATEGY     0x0001
 #define PNG_FLAG_ZSTREAM_INITIALIZED      0x0002 /* Added to libpng-1.6.0 */
@@ -648,7 +694,7 @@
 /* The fixed point conversion performs range checking and evaluates
  * its argument multiple times, so must be used with care.  The
  * range checking uses the PNG specification values for a signed
- * 32 bit fixed point value except that the values are deliberately
+ * 32-bit fixed point value except that the values are deliberately
  * rounded-to-zero to an integral value - 21474 (21474.83 is roughly
  * (2^31-1) * 100000). 's' is a string that describes the value being
  * converted.
@@ -795,7 +841,7 @@
     */
 #endif
 
-/* This is used for 16 bit gamma tables -- only the top level pointers are
+/* This is used for 16-bit gamma tables -- only the top level pointers are
  * const; this could be changed:
  */
 typedef const png_uint_16p * png_const_uint_16pp;
@@ -1008,7 +1054,7 @@ PNG_INTERNAL_FUNCTION(void,png_write_sBIT,(png_structrp png_ptr,
 #ifdef PNG_WRITE_cHRM_SUPPORTED
 PNG_INTERNAL_FUNCTION(void,png_write_cHRM_fixed,(png_structrp png_ptr,
     const png_xy *xy), PNG_EMPTY);
-    /* The xy value must have been previously validated */
+   /* The xy value must have been previously validated */
 #endif
 
 #ifdef PNG_WRITE_sRGB_SUPPORTED
@@ -1157,6 +1203,7 @@ PNG_INTERNAL_FUNCTION(void,png_do_write_interlace,(png_row_infop row_info,
 PNG_INTERNAL_FUNCTION(void,png_read_filter_row,(png_structrp pp, png_row_infop
     row_info, png_bytep row, png_const_bytep prev_row, int filter),PNG_EMPTY);
 
+#if PNG_ARM_NEON_OPT > 0
 PNG_INTERNAL_FUNCTION(void,png_read_filter_row_up_neon,(png_row_infop row_info,
     png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_read_filter_row_sub3_neon,(png_row_infop
@@ -1171,6 +1218,24 @@ PNG_INTERNAL_FUNCTION(void,png_read_filter_row_paeth3_neon,(png_row_infop
     row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_read_filter_row_paeth4_neon,(png_row_infop
     row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+#endif
+
+#if PNG_MIPS_MSA_OPT > 0
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_up_msa,(png_row_infop row_info,
+    png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_sub3_msa,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_sub4_msa,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_avg3_msa,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_avg4_msa,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_paeth3_msa,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_paeth4_msa,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+#endif
 
 /* Choose the best filter to use and filter the row data */
 PNG_INTERNAL_FUNCTION(void,png_write_find_filter,(png_structrp png_ptr,
@@ -1197,6 +1262,14 @@ PNG_INTERNAL_FUNCTION(void,png_read_finish_row,(png_structrp png_ptr),
 
 /* Initialize the row buffers, etc. */
 PNG_INTERNAL_FUNCTION(void,png_read_start_row,(png_structrp png_ptr),PNG_EMPTY);
+
+#if PNG_ZLIB_VERNUM >= 0x1240
+PNG_INTERNAL_FUNCTION(int,png_zlib_inflate,(png_structrp png_ptr, int flush),
+      PNG_EMPTY);
+#  define PNG_INFLATE(pp, flush) png_zlib_inflate(pp, flush)
+#else /* Zlib < 1.2.4 */
+#  define PNG_INFLATE(pp, flush) inflate(&(pp)->zstream, flush)
+#endif /* Zlib < 1.2.4 */
 
 #ifdef PNG_READ_TRANSFORMS_SUPPORTED
 /* Optional call to update the users info structure */
@@ -1372,10 +1445,6 @@ PNG_INTERNAL_FUNCTION(void,png_push_read_chunk,(png_structrp png_ptr,
 PNG_INTERNAL_FUNCTION(void,png_push_read_sig,(png_structrp png_ptr,
     png_inforp info_ptr),PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_push_check_crc,(png_structrp png_ptr),PNG_EMPTY);
-PNG_INTERNAL_FUNCTION(void,png_push_crc_skip,(png_structrp png_ptr,
-    png_uint_32 length),PNG_EMPTY);
-PNG_INTERNAL_FUNCTION(void,png_push_crc_finish,(png_structrp png_ptr),
-    PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_push_save_buffer,(png_structrp png_ptr),
     PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_push_restore_buffer,(png_structrp png_ptr,
@@ -1392,7 +1461,7 @@ PNG_INTERNAL_FUNCTION(void,png_push_have_info,(png_structrp png_ptr,
 PNG_INTERNAL_FUNCTION(void,png_push_have_end,(png_structrp png_ptr,
    png_inforp info_ptr),PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_push_have_row,(png_structrp png_ptr,
-     png_bytep row),PNG_EMPTY);
+    png_bytep row),PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_push_read_end,(png_structrp png_ptr,
     png_inforp info_ptr),PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_process_some_data,(png_structrp png_ptr,
@@ -1431,13 +1500,13 @@ PNG_INTERNAL_FUNCTION(void,png_colorspace_set_gamma,(png_const_structrp png_ptr,
 
 PNG_INTERNAL_FUNCTION(void,png_colorspace_sync_info,(png_const_structrp png_ptr,
     png_inforp info_ptr), PNG_EMPTY);
-    /* Synchronize the info 'valid' flags with the colorspace */
+   /* Synchronize the info 'valid' flags with the colorspace */
 
 PNG_INTERNAL_FUNCTION(void,png_colorspace_sync,(png_const_structrp png_ptr,
     png_inforp info_ptr), PNG_EMPTY);
-    /* Copy the png_struct colorspace to the info_struct and call the above to
-     * synchronize the flags.  Checks for NULL info_ptr and does nothing.
-     */
+   /* Copy the png_struct colorspace to the info_struct and call the above to
+    * synchronize the flags.  Checks for NULL info_ptr and does nothing.
+    */
 #endif
 
 /* Added at libpng version 1.4.0 */
@@ -1471,9 +1540,11 @@ PNG_INTERNAL_FUNCTION(int,png_colorspace_set_ICC,(png_const_structrp png_ptr,
    /* The 'name' is used for information only */
 
 /* Routines for checking parts of an ICC profile. */
+#ifdef PNG_READ_iCCP_SUPPORTED
 PNG_INTERNAL_FUNCTION(int,png_icc_check_length,(png_const_structrp png_ptr,
    png_colorspacerp colorspace, png_const_charp name,
    png_uint_32 profile_length), PNG_EMPTY);
+#endif /* READ_iCCP */
 PNG_INTERNAL_FUNCTION(int,png_icc_check_header,(png_const_structrp png_ptr,
    png_colorspacerp colorspace, png_const_charp name,
    png_uint_32 profile_length,
@@ -1892,9 +1963,19 @@ PNG_INTERNAL_FUNCTION(void, PNG_FILTER_OPTIMIZATIONS, (png_structp png_ptr,
     * the builder of libpng passes the definition of PNG_FILTER_OPTIMIZATIONS in
     * CFLAGS in place of CPPFLAGS *and* uses symbol prefixing.
     */
+#  if PNG_ARM_NEON_OPT > 0
 PNG_INTERNAL_FUNCTION(void, png_init_filter_functions_neon,
    (png_structp png_ptr, unsigned int bpp), PNG_EMPTY);
 #endif
+
+#if PNG_MIPS_MSA_OPT > 0
+PNG_INTERNAL_FUNCTION(void, png_init_filter_functions_msa,
+   (png_structp png_ptr, unsigned int bpp), PNG_EMPTY);
+#endif
+#endif
+
+PNG_INTERNAL_FUNCTION(png_uint_32, png_check_keyword, (png_structrp png_ptr,
+   png_const_charp key, png_bytep new_key), PNG_EMPTY);
 
 /* Maintainer: Put new private prototypes here ^ */
 
