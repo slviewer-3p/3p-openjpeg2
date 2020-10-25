@@ -20,12 +20,12 @@ else
     autobuild="$AUTOBUILD"
 fi
 
+stage="$(pwd)/stage"
+
 # load autobuild provided shell functions and variables
 source_environment_tempfile="$stage/source_environment.sh"
 "$autobuild" source_environment > "$source_environment_tempfile"
 . "$source_environment_tempfile"
-
-stage="$(pwd)/stage"
 
 build=${AUTOBUILD_BUILD_ID:=0}
 echo "${OPENJPEG_VERSION}.${build}" > "${stage}/VERSION.txt"
@@ -77,17 +77,11 @@ pushd "$OPENJPEG_SOURCE_DIR"
             cp src/lib/openjp2/cio.h "$stage/include/openjpeg"
 
         ;;
-        linux*)
-            if [ ${AUTOBUILD_ADDRSIZE} = 32 ] ; then
-                gcc_flags = "-m32"
-            else
-                gcc_flags = "-m64 -fPIC"
-            fi
-
+        linux64)
             rm -rf build
             mkdir build
             cd build
-            cmake .. -DCMAKE_CXX_FLAGS=-"$gcc_flags" -DCMAKE_C_FLAGS="$gcc_flags" -DCMAKE_INSTALL_PREFIX=${stage} -DBUILD_CODEC=OFF -DBUILD_SHARED_LIBS=OFF
+            cmake .. -DCMAKE_CXX_FLAGS="-m$AUTOBUILD_ADDRSIZE" -DCMAKE_C_FLAGS="-m$AUTOBUILD_ADDRSIZE" -DCMAKE_INSTALL_PREFIX=${stage} -DBUILD_CODEC=OFF -DBUILD_SHARED_LIBS=OFF
 
             make
             make install
@@ -98,12 +92,13 @@ pushd "$OPENJPEG_SOURCE_DIR"
             mv "$stage/libopenjp2.a" "$stage/lib/release"
 
             mkdir -p "$stage/include/openjpeg"
-            cp src/lib/openjp2/openjpeg.h "$stage/include/openjpeg"
-            cp src/lib/openjp2/opj_stdint.h "$stage/include/openjpeg"
+			
+            cp ../src/lib/openjp2/openjpeg.h "$stage/include/openjpeg"
+            cp ../src/lib/openjp2/opj_stdint.h "$stage/include/openjpeg"
             cp src/lib/openjp2/opj_config.h "$stage/include/openjpeg"
             cp src/lib/openjp2/opj_config_private.h "$stage/include/openjpeg"
-            cp src/lib/openjp2/event.h "$stage/include/openjpeg"
-            cp src/lib/openjp2/cio.h "$stage/include/openjpeg"
+            cp ../src/lib/openjp2/event.h "$stage/include/openjpeg"
+            cp ../src/lib/openjp2/cio.h "$stage/include/openjpeg"
         ;;
     esac
     mkdir -p "$stage/LICENSES"
