@@ -7,7 +7,7 @@ exec 4>&1; export BASH_XTRACEFD=4; set -x
 # make errors fatal
 set -e
 
-OPENJPEG_VERSION="2.3.1"
+OPENJPEG_VERSION="2.4.0"
 OPENJPEG_SOURCE_DIR="src"
 
 if [ -z "$AUTOBUILD" ] ; then 
