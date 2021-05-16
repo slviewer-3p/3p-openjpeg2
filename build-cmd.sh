@@ -50,9 +50,7 @@ pushd "$OPENJPEG_SOURCE_DIR"
             cp src/lib/openjp2/openjpeg.h "$stage/include/openjpeg"
             cp src/lib/openjp2/opj_stdint.h "$stage/include/openjpeg"
             cp src/lib/openjp2/opj_config.h "$stage/include/openjpeg"
-            cp src/lib/openjp2/opj_config_private.h "$stage/include/openjpeg"
             cp src/lib/openjp2/event.h "$stage/include/openjpeg"
-            cp src/lib/openjp2/cio.h "$stage/include/openjpeg"
         ;;
 
         darwin*)
@@ -70,9 +68,7 @@ pushd "$OPENJPEG_SOURCE_DIR"
             cp src/lib/openjp2/openjpeg.h "$stage/include/openjpeg"
             cp src/lib/openjp2/opj_stdint.h "$stage/include/openjpeg"
             cp src/lib/openjp2/opj_config.h "$stage/include/openjpeg"
-            cp src/lib/openjp2/opj_config_private.h "$stage/include/openjpeg"
             cp src/lib/openjp2/event.h "$stage/include/openjpeg"
-            cp src/lib/openjp2/cio.h "$stage/include/openjpeg"
 
         ;;
         linux64)
@@ -94,9 +90,7 @@ pushd "$OPENJPEG_SOURCE_DIR"
             cp ../src/lib/openjp2/openjpeg.h "$stage/include/openjpeg"
             cp ../src/lib/openjp2/opj_stdint.h "$stage/include/openjpeg"
             cp src/lib/openjp2/opj_config.h "$stage/include/openjpeg"
-            cp src/lib/openjp2/opj_config_private.h "$stage/include/openjpeg"
             cp ../src/lib/openjp2/event.h "$stage/include/openjpeg"
-            cp ../src/lib/openjp2/cio.h "$stage/include/openjpeg"
         ;;
     esac
     mkdir -p "$stage/LICENSES"
