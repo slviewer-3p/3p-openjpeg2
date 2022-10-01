@@ -75,7 +75,7 @@ pushd "$OPENJPEG_SOURCE_DIR"
             rm -rf build
             mkdir build
             cd build
-            cmake .. -DCMAKE_CXX_FLAGS="-m$AUTOBUILD_ADDRSIZE" -DCMAKE_C_FLAGS="-m$AUTOBUILD_ADDRSIZE" -DCMAKE_INSTALL_PREFIX=${stage} -DBUILD_CODEC=OFF -DBUILD_SHARED_LIBS=OFF
+            cmake .. -DCMAKE_CXX_FLAGS="${AUTOBUILD_GCC_ARCH}" -DCMAKE_C_FLAGS="${AUTOBUILD_GCC_ARCH}" -DCMAKE_INSTALL_PREFIX=${stage} -DBUILD_CODEC=OFF -DBUILD_SHARED_LIBS=OFF
 
             make
             make install
